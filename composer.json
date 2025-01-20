@@ -14,8 +14,7 @@
     "sort-packages": true
   },
   "require": {
-    "php": "~8.3.0 || ~8.4.0",
-    "ext-swoole": "*"
+    "php": "~8.3.0 || ~8.4.0"
   },
   "require-dev": {
     "laminas/laminas-coding-standard": "^3.0",
