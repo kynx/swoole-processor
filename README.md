@@ -1,5 +1,7 @@
 # kynx/swoole-processor
 
+[![Continuous Integration](https://github.com/kynx/swoole-processor/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/kynx/swoole-processor/actions/workflows/continuous-integration.yml)
+
 Run batch jobs in coroutines across multiple processes.
 
 Based on [Swoole], the processor is ideal for running a large number of IO-intensive operations.
