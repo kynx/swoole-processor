@@ -4,14 +4,17 @@
   "type": "library",
   "license": "MIT",
   "config": {
-    "optimize-autoloader": true,
-    "sort-packages": true,
     "allow-plugins": {
       "dealerdirect/phpcodesniffer-composer-installer": true
-    }
+    },
+    "optimize-autoloader": true,
+    "platform": {
+      "php": "8.3.99"
+    },
+    "sort-packages": true
   },
   "require": {
-    "php": "~8.3.0",
+    "php": "~8.3.0 || ~8.4.0",
     "ext-swoole": "*"
   },
   "require-dev": {
