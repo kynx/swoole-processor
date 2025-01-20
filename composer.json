@@ -1,0 +1,47 @@
+{
+  "name": "kynx/swoole-processor",
+  "description": "Execute tasks in multi-process environment",
+  "type": "library",
+  "license": "MIT",
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true,
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
+  },
+  "require": {
+    "php": "~8.3.0",
+    "ext-swoole": "*"
+  },
+  "require-dev": {
+    "laminas/laminas-coding-standard": "^3.0",
+    "phpunit/phpunit": "^10.5",
+    "psalm/plugin-phpunit": "^0.19.0",
+    "squizlabs/php_codesniffer": "^3.11",
+    "swoole/ide-helper": "^5.1",
+    "vimeo/psalm": "^5.26"
+  },
+  "autoload": {
+    "psr-4": {
+      "Kynx\\Swoole\\Processor\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "KynxTest\\Swoole\\Processor\\": "test/"
+    }
+  },
+  "scripts": {
+    "check": [
+      "@cs-check",
+      "@static-analysis",
+      "@test"
+    ],
+    "cs-check": "phpcs",
+    "cs-fix": "phpcbf",
+    "static-analysis": "psalm --no-cache",
+    "test": "phpunit --colors=always",
+    "test-coverage": "phpunit --colors=always"
+  }
+}

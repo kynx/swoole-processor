@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+    findUnusedBaselineEntry="true"
+    findUnusedCode="true"
+    errorBaseline="psalm-baseline.xml"
+>
+    <projectFiles>
+        <directory name="src"/>
+        <directory name="test"/>
+    </projectFiles>
+
+    <plugins>
+        <pluginClass class="Psalm\PhpUnitPlugin\Plugin"/>
+    </plugins>
+    
+    <stubs>
+        <file name="vendor/swoole/ide-helper/src/swoole/Swoole/Client.php"/>
+        <file name="vendor/swoole/ide-helper/src/swoole/Swoole/Coroutine.php"/>
+        <file name="vendor/swoole/ide-helper/src/swoole/Swoole/Coroutine/Channel.php"/>
+        <file name="vendor/swoole/ide-helper/src/swoole/Swoole/Server.php"/>
+    </stubs>
+</psalm>
