@@ -22,7 +22,6 @@ final class MockWorker implements WorkerInterface
 
     public function init(int $workerId): void
     {
-        echo "worker $workerId init\n";
         fwrite($this->handle, "worker $workerId init\n");
     }
 

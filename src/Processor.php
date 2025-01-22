@@ -30,10 +30,15 @@ final readonly class Processor
     ) {
         $this->server = new Server($config->getSocket(), 0, SWOOLE_PROCESS, SWOOLE_UNIX_STREAM);
         $this->server->set([
-            'daemonize'     => false,
-            'worker_num'    => $config->getWorkers(),
-            'max_coroutine' => $config->getMaxCoroutines(),
-            'hook_flags'    => SWOOLE_HOOK_ALL,
+            'daemonize'             => false,
+            'hook_flags'            => SWOOLE_HOOK_ALL,
+            'max_coroutine'         => $config->getMaxCoroutines(),
+            'open_length_check'     => true,
+            'package_max_length'    => 2 * 1024 * 1024,
+            'package_length_type'   => 'N',
+            'package_length_offset' => 0,
+            'package_body_offset'   => 4,
+            'worker_num'            => $config->getWorkers(),
         ]);
 
         $this->server->on('WorkerStart', new WorkerStartHandler($worker));

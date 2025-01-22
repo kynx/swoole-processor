@@ -13,7 +13,9 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Swoole\Server;
 
+use function pack;
 use function serialize;
+use function strlen;
 
 #[CoversClass(ReceiveHandler::class)]
 final class ReceiveHandlerTest extends TestCase
@@ -26,13 +28,15 @@ final class ReceiveHandlerTest extends TestCase
         $worker->method('run')
             ->willReturn($expected);
 
-        $server = $this->createMock(Server::class);
+        $server     = $this->createMock(Server::class);
+        $serialized = serialize($expected);
         $server->expects(self::once())
             ->method('send')
-            ->with(123, serialize($expected));
+            ->with(123, pack('N', strlen($serialized)) . $serialized);
 
         $handler = new ReceiveHandler($worker);
-        ($handler)($server, 123, 1, serialize($job));
+        $data    = serialize($job);
+        ($handler)($server, 123, 1, pack('N', $data) . $data);
     }
 
     public function testInvokeHandlesWorkerException(): void
@@ -44,12 +48,14 @@ final class ReceiveHandlerTest extends TestCase
         $worker->method('run')
             ->willThrowException($exception);
 
-        $server = $this->createMock(Server::class);
+        $server     = $this->createMock(Server::class);
+        $serialized = serialize($expected);
         $server->expects(self::once())
             ->method('send')
-            ->with(123, serialize($expected));
+            ->with(123, pack('N', strlen($serialized)) . $serialized);
 
         $handler = new ReceiveHandler($worker);
-        ($handler)($server, 123, 1, serialize($job));
+        $data    = serialize($job);
+        ($handler)($server, 123, 1, pack('N', $data) . $data);
     }
 }

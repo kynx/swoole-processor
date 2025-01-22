@@ -18,7 +18,9 @@ use Swoole\Server;
 
 use function array_map;
 use function array_shift;
+use function pack;
 use function serialize;
+use function strlen;
 use function Swoole\Coroutine\run;
 
 #[CoversClass(JobRunner::class)]
@@ -62,7 +64,8 @@ final class JobRunnerTest extends TestCase
             ->with(self::SOCK);
         $this->client->method('recv')
             ->willReturnCallback(static function () use (&$processed): string {
-                return serialize(array_shift($processed));
+                $serialized = serialize(array_shift($processed));
+                return pack('N', strlen($serialized)) . $serialized;
             });
         $this->completionHandler->method('complete')
             ->willReturnCallback(static function (Job $job) use (&$completed) {
