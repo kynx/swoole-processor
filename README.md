@@ -2,7 +2,7 @@
 
 [![Continuous Integration](https://github.com/kynx/swoole-processor/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/kynx/swoole-processor/actions/workflows/continuous-integration.yml)
 
-Run batch jobs in coroutines across multiple processes.
+Run CLI batch jobs in coroutines across multiple processes.
 
 Based on [Swoole], the processor is ideal for running a large number of IO-intensive operations.
 
@@ -112,7 +112,7 @@ the `Config` you pass to the constructor. It defaults to 10, with a maximum of `
 
 ## Caveats
 
-* `Job` payloads and results **must be serializable** and together should be less than 64K when serialized.
+* `Job` payloads and results **must be serializable** and, but default, together should be less than 2M when serialized
 * A `Worker` should be **stateless**. If you need share data between workers, use a [Table].
 * Uncaught exceptions will crash the process, causing it it re-spawn. For this reason your `Worker::run()` is called
   inside a `try ... catch` block. However the exception is discarded: if you care about where your program is going

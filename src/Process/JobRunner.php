@@ -41,24 +41,25 @@ final readonly class JobRunner
         private JobProviderInterface $jobProvider,
         private CompletionHandlerInterface $completionHandler,
         private int $concurrency = 10,
+        int $maxPacketLength = 2 * 1024 * 1024,
         ?Closure $clientFactory = null
     ) {
-        $this->clientFactory = $clientFactory ?? self::getDefaultClientFactory();
+        $this->clientFactory = $clientFactory ?? self::getDefaultClientFactory($maxPacketLength);
     }
 
     /**
      * @return Closure():Client
      */
-    public static function getDefaultClientFactory(): Closure
+    public static function getDefaultClientFactory(int $maxPacketLength): Closure
     {
-        return static function (): Client {
+        return static function () use ($maxPacketLength): Client {
             $client = new Client(SWOOLE_SOCK_UNIX_STREAM, SWOOLE_SOCK_SYNC);
             $client->set([
                 'open_length_check'     => true,
                 'package_length_type'   => 'N',
                 'package_length_offset' => 0,
                 'package_body_offset'   => 4,
-                'package_max_length'    => 2 * 1024 * 1024,
+                'package_max_length'    => $maxPacketLength,
             ]);
 
             return $client;

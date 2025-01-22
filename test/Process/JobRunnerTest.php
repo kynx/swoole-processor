@@ -77,6 +77,7 @@ final class JobRunnerTest extends TestCase
             $this->jobProvider,
             $this->completionHandler,
             2,
+            64 * 1024,
             fn(): Client => $this->client
         );
 
