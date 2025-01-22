@@ -56,9 +56,9 @@ final readonly class JobRunner
             $client = new Client(SWOOLE_SOCK_UNIX_STREAM, SWOOLE_SOCK_SYNC);
             $client->set([
                 'open_length_check'     => true,
-                'package_length_type'   => 'N',
-                'package_length_offset' => 0,
                 'package_body_offset'   => 4,
+                'package_length_offset' => 0,
+                'package_length_type'   => 'N',
                 'package_max_length'    => $maxPacketLength,
             ]);
 
