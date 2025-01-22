@@ -16,6 +16,7 @@ use function getmypid;
 use function glob;
 use function is_dir;
 use function mkdir;
+use function str_repeat;
 use function sys_get_temp_dir;
 use function tempnam;
 use function unlink;
@@ -88,5 +89,16 @@ final class ProcessorTest extends TestCase
         foreach ($expected as $line) {
             self::assertStringContainsString($line, $actual);
         }
+    }
+
+    public function testProcessHandlesLargePayload(): void
+    {
+        $payload                 = str_repeat('a', 1024 * 796);
+        $expected                = "complete result: $payload processed";
+        $this->jobProvider->jobs = [new Job($payload)];
+        $this->processor->start();
+
+        $actual = file_get_contents($this->outfile);
+        self::assertStringContainsString($expected, $actual);
     }
 }

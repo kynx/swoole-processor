@@ -11,7 +11,10 @@ use Swoole\Server;
 use Throwable;
 
 use function assert;
+use function pack;
 use function serialize;
+use function strlen;
+use function substr;
 use function unserialize;
 
 /**
@@ -28,14 +31,21 @@ final readonly class ReceiveHandler
 
     public function __invoke(Server $server, int $fd, int $rectorId, string $data): void
     {
-        $job = unserialize($data);
+        $job = unserialize(substr($data, 4));
         assert($job instanceof Job);
+        unset($data);
 
         try {
-            $result = $this->worker->run($job);
-            $server->send($fd, serialize($result));
+            $this->send($server, $this->worker->run($job), $fd);
         } catch (Throwable $throwable) {
-            $server->send($fd, serialize($job->withResult(WorkerError::fromThrowable($throwable))));
+            $this->send($server, $job->withResult(WorkerError::fromThrowable($throwable)), $fd);
         }
+    }
+
+    private function send(Server $server, Job $job, int $fd): void
+    {
+        $serialized = serialize($job);
+        unset($job);
+        $server->send($fd, pack('N', strlen($serialized)) . $serialized);
     }
 }

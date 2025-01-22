@@ -13,7 +13,10 @@ use Swoole\Coroutine;
 use Swoole\Coroutine\Channel;
 use Swoole\Server;
 
+use function pack;
 use function serialize;
+use function strlen;
+use function substr;
 use function unserialize;
 
 use const SWOOLE_SOCK_SYNC;
@@ -40,8 +43,26 @@ final readonly class JobRunner
         private int $concurrency = 10,
         ?Closure $clientFactory = null
     ) {
-        $this->clientFactory = $clientFactory
-            ?? static fn (): Client => new Client(SWOOLE_SOCK_UNIX_STREAM, SWOOLE_SOCK_SYNC);
+        $this->clientFactory = $clientFactory ?? self::getDefaultClientFactory();
+    }
+
+    /**
+     * @return Closure():Client
+     */
+    public static function getDefaultClientFactory(): Closure
+    {
+        return static function (): Client {
+            $client = new Client(SWOOLE_SOCK_UNIX_STREAM, SWOOLE_SOCK_SYNC);
+            $client->set([
+                'open_length_check'     => true,
+                'package_length_type'   => 'N',
+                'package_length_offset' => 0,
+                'package_body_offset'   => 4,
+                'package_max_length'    => 2 * 1024 * 1024,
+            ]);
+
+            return $client;
+        };
     }
 
     public function __invoke(): void
@@ -86,10 +107,14 @@ final readonly class JobRunner
 
         return static function () use ($client, $job, $channel, $socket) {
             $client->connect($socket);
-            $client->send(serialize($job));
+            $serialized = serialize($job);
+            unset($job);
+            $client->send(pack('N', strlen($serialized)) . $serialized);
 
             $result = $client->recv();
-            $channel->push(unserialize($result));
+            /** @var mixed $data */
+            $data = $result === false ? null : unserialize(substr($result, 4));
+            $channel->push($data);
         };
     }
 }

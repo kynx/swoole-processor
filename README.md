@@ -75,16 +75,23 @@ Create a script to run the jobs in parallel:
 ```php
 use Kynx\Swoole\Processor\Config;
 use Kynx\Swoole\Processor\Processor;
+use Throwable;
 
-$processor = new Processor(
-    new Config(),
-    new JobProvider(),
-    new Worker(),
-    new CompletionHandler()
-);
+try {
+    $processor = new Processor(
+        new Config(),
+        new JobProvider(),
+        new Worker(),
+        new CompletionHandler()
+    );
 
-// this will block until all jobs are processed
-$processor->start();
+    // this will block until all jobs are processed
+    $processor->start();
+} catch (Throwable $throwable) {
+    fwrite(STDERR, sprintf("Failed to start processor: %s\n", $throwable->getMessage()));
+    exit(1);
+}
+
 ```
 
 If you don't need to handle completion, omit the fourth parameter.
