@@ -27,7 +27,6 @@ final readonly class Processor
         JobProviderInterface $jobProvider,
         WorkerInterface $worker,
         CompletionHandlerInterface $completionHandler = new NoOpCompletionHandler(),
-        int $maxPacketLength = 2 * 1024 * 1024,
     ) {
         $this->server = new Server($config->getSocket(), 0, SWOOLE_PROCESS, SWOOLE_UNIX_STREAM);
         $this->server->set([
@@ -35,17 +34,23 @@ final readonly class Processor
             'hook_flags'            => SWOOLE_HOOK_ALL,
             'max_coroutine'         => $config->getMaxCoroutines(),
             'open_length_check'     => true,
-            'package_max_length'    => $maxPacketLength,
-            'package_length_type'   => 'N',
-            'package_length_offset' => 0,
             'package_body_offset'   => 4,
+            'package_length_offset' => 0,
+            'package_length_type'   => 'N',
+            'package_max_length'    => $config->getMaxPacketLength(),
             'worker_num'            => $config->getWorkers(),
         ]);
 
         $this->server->on('WorkerStart', new WorkerStartHandler($worker));
         $this->server->on('Receive', new ReceiveHandler($worker));
 
-        $runner = new JobRunner($this->server, $jobProvider, $completionHandler, $config->getConcurrency());
+        $runner = new JobRunner(
+            $this->server,
+            $jobProvider,
+            $completionHandler,
+            $config->getConcurrency(),
+            $config->getMaxPacketLength()
+        );
         $this->server->addProcess(new Process($runner, false, 0, true));
     }
 
