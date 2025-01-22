@@ -22,7 +22,6 @@ final class ConfigTest extends TestCase
         $concurrency   = 123;
         $workers       = 12;
         $maxCoroutines = 3_000;
-        $socket        = '/tmp/test.sock';
 
         $config = new Config($concurrency, $workers, $maxCoroutines, $socket);
 
@@ -38,7 +37,6 @@ final class ConfigTest extends TestCase
         $workers       = swoole_cpu_num() - 1;
         $maxCoroutines = 1_000_000;
         $socket        = sprintf(
-            'unix://%s/swoole-processor.%s.sock',
             sys_get_temp_dir(),
             getmypid()
         );

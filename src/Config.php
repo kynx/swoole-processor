@@ -42,7 +42,7 @@ final readonly class Config
     public function getSocket(): string
     {
         return $this->socket ?? sprintf(
-            'unix://%s/swoole-processor.%s.sock',
+            '%s/swoole-processor.%s.sock',
             sys_get_temp_dir(),
             getmypid()
         );
