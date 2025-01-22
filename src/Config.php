@@ -19,7 +19,7 @@ final readonly class Config
         private int $maxCoroutines = 1_000_000,
         private ?string $socket = null,
     ) {
-        if ($this->concurrency > $this->getConcurrency()) {
+        if ($this->concurrency > $this->getMaximumConcurrency()) {
             throw MaximumConcurrencyException::fromConfig($this);
         }
     }
@@ -42,7 +42,7 @@ final readonly class Config
     public function getSocket(): string
     {
         return $this->socket ?? sprintf(
-            'unix:///%s/swoole-processor.%s.sock',
+            'unix://%s/swoole-processor.%s.sock',
             sys_get_temp_dir(),
             getmypid()
         );

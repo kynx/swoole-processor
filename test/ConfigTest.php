@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KynxTest\Swoole\Processor;
 
 use Kynx\Swoole\Processor\Config;
+use Kynx\Swoole\Processor\Exception\MaximumConcurrencyException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -37,7 +38,7 @@ final class ConfigTest extends TestCase
         $workers       = swoole_cpu_num() - 1;
         $maxCoroutines = 1_000_000;
         $socket        = sprintf(
-            'unix:///%s/swoole-processor.%s.sock',
+            'unix://%s/swoole-processor.%s.sock',
             sys_get_temp_dir(),
             getmypid()
         );
@@ -48,5 +49,11 @@ final class ConfigTest extends TestCase
         self::assertSame($workers, $config->getWorkers());
         self::assertSame($maxCoroutines, $config->getMaxCoroutines());
         self::assertSame($socket, $config->getSocket());
+    }
+
+    public function testConstructorChecksMaximumConcurrency(): void
+    {
+        self::expectException(MaximumConcurrencyException::class);
+        new Config(3, 1, 2);
     }
 }
