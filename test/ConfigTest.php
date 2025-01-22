@@ -19,26 +19,29 @@ final class ConfigTest extends TestCase
 {
     public function testConstructorSetsProperties(): void
     {
-        $concurrency   = 123;
-        $workers       = 12;
-        $maxCoroutines = 3_000;
-        $socket        = '/tmp/test.sock';
+        $concurrency     = 123;
+        $workers         = 12;
+        $maxCoroutines   = 3_000;
+        $maxPacketLength = 64 * 1024;
+        $socket          = '/tmp/test.sock';
 
-        $config = new Config($concurrency, $workers, $maxCoroutines, $socket);
+        $config = new Config($concurrency, $workers, $maxCoroutines, $maxPacketLength, $socket);
 
         self::assertSame($concurrency, $config->getConcurrency());
         self::assertSame($workers, $config->getWorkers());
         self::assertSame($maxCoroutines, $config->getMaxCoroutines());
+        self::assertSame($maxPacketLength, $config->getMaxPacketLength());
         self::assertSame($socket, $config->getSocket());
     }
 
     public function testConstructorSetsDefaults(): void
     {
-        $concurrency   = 10;
-        $workers       = swoole_cpu_num() - 1;
-        $maxCoroutines = 1_000_000;
-        $socket        = sprintf(
-            'unix://%s/swoole-processor.%s.sock',
+        $concurrency     = 10;
+        $workers         = swoole_cpu_num() - 1;
+        $maxCoroutines   = 1_000_000;
+        $maxPacketLength = 2 * 1024 * 1024;
+        $socket          = sprintf(
+            '%s/swoole-processor.%s.sock',
             sys_get_temp_dir(),
             getmypid()
         );
@@ -48,6 +51,7 @@ final class ConfigTest extends TestCase
         self::assertSame($concurrency, $config->getConcurrency());
         self::assertSame($workers, $config->getWorkers());
         self::assertSame($maxCoroutines, $config->getMaxCoroutines());
+        self::assertSame($maxPacketLength, $config->getMaxPacketLength());
         self::assertSame($socket, $config->getSocket());
     }
 

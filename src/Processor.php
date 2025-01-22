@@ -26,7 +26,8 @@ final readonly class Processor
         Config $config,
         JobProviderInterface $jobProvider,
         WorkerInterface $worker,
-        CompletionHandlerInterface $completionHandler = new NoOpCompletionHandler()
+        CompletionHandlerInterface $completionHandler = new NoOpCompletionHandler(),
+        int $maxPacketLength = 2 * 1024 * 1024,
     ) {
         $this->server = new Server($config->getSocket(), 0, SWOOLE_PROCESS, SWOOLE_UNIX_STREAM);
         $this->server->set([
@@ -34,7 +35,7 @@ final readonly class Processor
             'hook_flags'            => SWOOLE_HOOK_ALL,
             'max_coroutine'         => $config->getMaxCoroutines(),
             'open_length_check'     => true,
-            'package_max_length'    => 2 * 1024 * 1024,
+            'package_max_length'    => $maxPacketLength,
             'package_length_type'   => 'N',
             'package_length_offset' => 0,
             'package_body_offset'   => 4,

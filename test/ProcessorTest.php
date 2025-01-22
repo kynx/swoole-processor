@@ -40,7 +40,7 @@ final class ProcessorTest extends TestCase
         $this->outfile     = tempnam($this->tempDir, 'out');
         $this->jobProvider = new MockJobProvider();
 
-        $config          = new Config(3, 2, 10, $this->tempDir . '/processor.sock');
+        $config          = new Config(3, 2, 10, 2 * 1024 * 1024, $this->tempDir . '/processor.sock');
         $this->processor = new Processor(
             $config,
             $this->jobProvider,
