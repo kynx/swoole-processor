@@ -31,6 +31,8 @@
   <file src="test/Process/JobRunnerTest.php">
     <UnusedFunctionCall>
       <code><![CDATA[run]]></code>
+      <code><![CDATA[run]]></code>
+      <code><![CDATA[run]]></code>
     </UnusedFunctionCall>
   </file>
 </files>

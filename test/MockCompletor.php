@@ -12,6 +12,7 @@ use function fwrite;
 
 final class MockCompletor implements CompletionHandlerInterface
 {
+    public bool $triggerError = false;
     /** @var resource */
     private $handle;
 
@@ -22,6 +23,10 @@ final class MockCompletor implements CompletionHandlerInterface
 
     public function complete(Job $job): void
     {
+        if ($this->triggerError) {
+            die("Completor died");
+        }
+
         $result = (string) $job->getResult();
         fwrite($this->handle, "complete result: $result\n");
     }

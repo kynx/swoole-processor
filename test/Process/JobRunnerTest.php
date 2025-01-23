@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace KynxTest\Swoole\Processor\Process;
 
 use ArrayIterator;
+use Exception;
 use Kynx\Swoole\Processor\Job\CompletionHandlerInterface;
 use Kynx\Swoole\Processor\Job\Job;
 use Kynx\Swoole\Processor\Job\JobProviderInterface;
@@ -13,7 +14,9 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
+use Swoole\Atomic;
 use Swoole\Client;
+use Swoole\Process;
 use Swoole\Server;
 
 use function array_map;
@@ -28,20 +31,47 @@ final class JobRunnerTest extends TestCase
 {
     private const SOCK = '/tmp/server.sock';
 
-    private Server&Stub $server;
+    private Server&MockObject $server;
+    private Atomic $errorCount;
     private Client&MockObject $client;
     private JobProviderInterface&Stub $jobProvider;
     private CompletionHandlerInterface&MockObject $completionHandler;
+    private JobRunner $runner;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->server            = self::createStub(Server::class);
+        $this->server            = $this->createMock(Server::class);
         $this->server->host      = self::SOCK;
+        $this->errorCount        = new Atomic();
         $this->client            = $this->createMock(Client::class);
         $this->jobProvider       = self::createStub(JobProviderInterface::class);
         $this->completionHandler = $this->createMock(CompletionHandlerInterface::class);
+
+        $this->runner = new JobRunner(
+            $this->server,
+            $this->errorCount,
+            $this->jobProvider,
+            $this->completionHandler,
+            2,
+            64 * 1024,
+            fn(): Client => $this->client
+        );
+    }
+
+    public function testInvokeHandlesEmptyIterator(): void
+    {
+        $this->jobProvider->method('getIterator')
+            ->willReturn(new ArrayIterator([]));
+        $this->client->expects(self::never())
+            ->method('connect');
+        $this->completionHandler->expects(self::never())
+            ->method('complete');
+
+        run($this->runner);
+
+        self::assertSame(0, $this->errorCount->get());
     }
 
     public function testInvokeRunsJobs(): void
@@ -74,15 +104,42 @@ final class JobRunnerTest extends TestCase
                 $completed[] = $job;
             });
 
-        $runner = new JobRunner(
-            $this->server,
-            $this->jobProvider,
-            $this->completionHandler,
-            2,
-            64 * 1024,
-            fn(): Client => $this->client
-        );
+        run($this->runner);
 
-        run($runner);
+        self::assertSame(0, $this->errorCount->get());
+    }
+
+    public function testInvokeRetriesSocketSend(): void
+    {
+        self::markTestSkipped('Interferes with other tests!');
+        $this->jobProvider->method('getIterator')
+            ->willReturn(new ArrayIterator([new Job('a')]));
+        $this->client->expects(self::exactly(2))
+            ->method('send')
+            ->willReturnOnConsecutiveCalls(false, 123);
+        $serialized = serialize(new Job('b'));
+        $this->client->expects(self::once())
+            ->method('recv')
+            ->willReturn(pack('N', strlen($serialized)) . $serialized);
+
+        run($this->runner);
+
+        self::assertSame(0, $this->errorCount->get());
+    }
+
+    public function testInvokeWithExceptionIncrementsErrorsAndLogs(): void
+    {
+        $exception = new Exception("Iterator failed");
+        $this->jobProvider->method('getIterator')
+            ->willThrowException($exception);
+
+        $process = new Process($this->runner, true, 0, true);
+        $started = $process->start();
+        self::assertGreaterThan(1, $started);
+        Process::wait();
+        $error = $process->read(128);
+        self::assertStringContainsString("Exception thrown in JobRunner", (string) $error);
+
+        self::assertSame(1, $this->errorCount->get());
     }
 }

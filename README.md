@@ -77,20 +77,16 @@ use Kynx\Swoole\Processor\Config;
 use Kynx\Swoole\Processor\Processor;
 use Throwable;
 
-try {
-    $processor = new Processor(
-        new Config(),
-        new JobProvider(),
-        new Worker(),
-        new CompletionHandler()
-    );
+$processor = new Processor(
+    new Config(),
+    new JobProvider(),
+    new Worker(),
+    new CompletionHandler()
+);
 
-    // this will block until all jobs are processed
-    $processor->start();
-} catch (Throwable $throwable) {
-    fwrite(STDERR, sprintf("Failed to start processor: %s\n", $throwable->getMessage()));
-    exit(1);
-}
+// this will block until all jobs are processed
+$result = $processor->run();
+return $result === true ? 0 : 1;
 
 ```
 

@@ -8,17 +8,24 @@ use Closure;
 use Kynx\Swoole\Processor\Job\CompletionHandlerInterface;
 use Kynx\Swoole\Processor\Job\Job;
 use Kynx\Swoole\Processor\Job\JobProviderInterface;
+use Swoole\Atomic;
 use Swoole\Client;
 use Swoole\Coroutine;
 use Swoole\Coroutine\Channel;
 use Swoole\Server;
+use Throwable;
 
 use function pack;
 use function serialize;
+use function socket_strerror;
+use function sprintf;
 use function strlen;
 use function substr;
+use function swoole_error_log;
 use function unserialize;
+use function usleep;
 
+use const SWOOLE_LOG_ERROR;
 use const SWOOLE_SOCK_SYNC;
 use const SWOOLE_SOCK_UNIX_STREAM;
 
@@ -38,6 +45,7 @@ final readonly class JobRunner
      */
     public function __construct(
         private Server $server,
+        private Atomic $errorCount,
         private JobProviderInterface $jobProvider,
         private CompletionHandlerInterface $completionHandler,
         private int $concurrency = 10,
@@ -68,6 +76,23 @@ final readonly class JobRunner
 
     public function __invoke(): void
     {
+        try {
+            $this->iterateJobs();
+        } catch (Throwable $throwable) {
+            $this->errorCount->add();
+            swoole_error_log(SWOOLE_LOG_ERROR, sprintf(
+                "Exception thrown in JobRunner: %s %s\n%s",
+                $throwable::class,
+                $throwable->getMessage(),
+                $throwable->getTraceAsString()
+            ));
+        } finally {
+            $this->server->shutdown();
+        }
+    }
+
+    public function iterateJobs(): void
+    {
         $channel    = new Channel($this->concurrency);
         $processing = 0;
 
@@ -80,6 +105,11 @@ final readonly class JobRunner
             Coroutine::create($this->getRunner($iterator->current(), $channel));
             $iterator->next();
             $processing++;
+        }
+
+        if ($processing === 0) {
+            $this->server->shutdown();
+            return;
         }
 
         do {
@@ -125,9 +155,9 @@ final readonly class JobRunner
             }
 
             $result = $client->recv();
-            /** @var mixed $data */
-            $data = $result === false ? null : unserialize(substr($result, 4));
-            $channel->push($data);
+            if ($result !== false) {
+                $channel->push(unserialize(substr($result, 4)));
+            }
         };
     }
 }
