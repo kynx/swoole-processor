@@ -11,6 +11,7 @@ use Kynx\Swoole\Processor\Job\Job;
 use Kynx\Swoole\Processor\Job\JobProviderInterface;
 use Kynx\Swoole\Processor\Process\JobRunner;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
@@ -27,6 +28,7 @@ use function strlen;
 use function Swoole\Coroutine\run;
 
 #[CoversClass(JobRunner::class)]
+#[RunTestsInSeparateProcesses]
 final class JobRunnerTest extends TestCase
 {
     private const SOCK = '/tmp/server.sock';
@@ -111,7 +113,6 @@ final class JobRunnerTest extends TestCase
 
     public function testInvokeRetriesSocketSend(): void
     {
-        self::markTestSkipped('Interferes with other tests!');
         $this->jobProvider->method('getIterator')
             ->willReturn(new ArrayIterator([new Job('a')]));
         $this->client->expects(self::exactly(2))
