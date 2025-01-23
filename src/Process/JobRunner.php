@@ -110,7 +110,19 @@ final readonly class JobRunner
             $client->connect($socket);
             $serialized = serialize($job);
             unset($job);
-            $client->send(pack('N', strlen($serialized)) . $serialized);
+
+            $attempts = 0;
+            while ($client->send(pack('N', strlen($serialized)) . $serialized) === false) {
+                $attempts++;
+                if ($attempts > 100) {
+                    swoole_error_log(
+                        SWOOLE_LOG_ERROR,
+                        sprintf("Could not send to socket: %s", socket_strerror($client->errCode))
+                    );
+                    return;
+                }
+                usleep(1000);
+            }
 
             $result = $client->recv();
             /** @var mixed $data */

@@ -62,6 +62,8 @@ final class JobRunnerTest extends TestCase
         $this->client->expects(self::exactly(3))
             ->method('connect')
             ->with(self::SOCK);
+        $this->client->method('send')
+            ->willReturn(123);
         $this->client->method('recv')
             ->willReturnCallback(static function () use (&$processed): string {
                 $serialized = serialize(array_shift($processed));
