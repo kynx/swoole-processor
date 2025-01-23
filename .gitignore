@@ -1,5 +1,6 @@
 /.idea/
 /*.iml
-/.phpunit.cache/
-/vendor/
 /.phpcs-cache
+/.phpunit.cache/
+/phpunit.xml
+/vendor/

@@ -8,6 +8,7 @@ use Kynx\Swoole\Processor\Config;
 use Kynx\Swoole\Processor\Job\Job;
 use Kynx\Swoole\Processor\Processor;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
@@ -26,6 +27,8 @@ final class ProcessorTest extends TestCase
 {
     private string $tempDir;
     private string $outfile;
+    private MockWorker $worker;
+    private MockCompletor $completor;
     private MockJobProvider $jobProvider;
     private Processor $processor;
 
@@ -39,13 +42,15 @@ final class ProcessorTest extends TestCase
         }
         $this->outfile     = tempnam($this->tempDir, 'out');
         $this->jobProvider = new MockJobProvider();
+        $this->worker      = new MockWorker($this->outfile);
+        $this->completor   = new MockCompletor($this->outfile);
 
         $config          = new Config(3, 2, 10, 2 * 1024 * 1024, $this->tempDir . '/processor.sock');
         $this->processor = new Processor(
             $config,
             $this->jobProvider,
-            new MockWorker($this->outfile),
-            new MockCompletor($this->outfile)
+            $this->worker,
+            $this->completor
         );
     }
 
@@ -62,6 +67,7 @@ final class ProcessorTest extends TestCase
         }
     }
 
+    #[Group('processor')]
     public function testProcessorRunsJobs(): void
     {
         $expected = [
@@ -83,7 +89,8 @@ final class ProcessorTest extends TestCase
 
         $payloads                = ['a', 'b', 'c', 'd', 'e', 'f'];
         $this->jobProvider->jobs = array_map(static fn (string $p): Job => new Job($p), $payloads);
-        $this->processor->start();
+        $result                  = $this->processor->run();
+        self::assertTrue($result);
 
         $actual = file_get_contents($this->outfile);
         foreach ($expected as $line) {
@@ -91,14 +98,33 @@ final class ProcessorTest extends TestCase
         }
     }
 
+    #[Group('processor')]
     public function testProcessHandlesLargePayload(): void
     {
-        $payload                 = str_repeat('a', 1024 * 796);
-        $expected                = "complete result: $payload processed";
-        $this->jobProvider->jobs = [new Job($payload)];
-        $this->processor->start();
+        $payloads                = [
+            str_repeat('a', 1024 * 796),
+            str_repeat('b', 1024 * 796),
+            str_repeat('c', 1024 * 796),
+            str_repeat('d', 1024 * 796),
+            str_repeat('e', 1024 * 796),
+        ];
+        $expected                = "complete result: " . $payloads[4] . " processed";
+        $this->jobProvider->jobs = array_map(static fn (string $p): Job => new Job($p), $payloads);
+        $result                  = $this->processor->run();
+        self::assertTrue($result);
 
         $actual = file_get_contents($this->outfile);
         self::assertStringContainsString($expected, $actual);
+    }
+
+    #[Group('processor')]
+    public function testRunWithCompletionExceptionReturnsFalse(): void
+    {
+        $this->completor->triggerError = true;
+
+        $this->jobProvider->jobs = [new Job('a')];
+        $result                  = $this->processor->run();
+
+        self::assertFalse($result);
     }
 }

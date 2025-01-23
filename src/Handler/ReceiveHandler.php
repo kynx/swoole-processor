@@ -7,6 +7,7 @@ namespace Kynx\Swoole\Processor\Handler;
 use Kynx\Swoole\Processor\Job\Job;
 use Kynx\Swoole\Processor\Job\WorkerError;
 use Kynx\Swoole\Processor\Job\WorkerInterface;
+use Swoole\Atomic;
 use Swoole\Server;
 use Throwable;
 
@@ -25,7 +26,7 @@ use function unserialize;
  */
 final readonly class ReceiveHandler
 {
-    public function __construct(private WorkerInterface $worker)
+    public function __construct(private WorkerInterface $worker, private Atomic $errorCount)
     {
     }
 
@@ -38,6 +39,7 @@ final readonly class ReceiveHandler
         try {
             $this->send($server, $this->worker->run($job), $fd);
         } catch (Throwable $throwable) {
+            $this->errorCount->add();
             $this->send($server, $job->withResult(WorkerError::fromThrowable($throwable)), $fd);
         }
     }

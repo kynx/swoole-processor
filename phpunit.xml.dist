@@ -7,8 +7,14 @@
          requireCoverageMetadata="true"
          beStrictAboutCoverageMetadata="true"
          beStrictAboutOutputDuringTests="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
+         displayDetailsOnTestsThatTriggerErrors="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnTestsThatTriggerNotices="true"
          failOnRisky="true"
-         failOnWarning="true">
+         failOnWarning="true"
+         failOnNotice="true"
+>
 
     <testsuites>
         <testsuite name="default">
@@ -17,7 +23,7 @@
     </testsuites>
     <groups>
         <exclude>
-            <group>gcloud</group>
+            <group>processor</group>
         </exclude>
     </groups>
 
@@ -26,9 +32,4 @@
             <directory>src</directory>
         </include>
     </source>
-    <php>
-        <!-- Application Default Credentials for running integration tests -->
-        <env name="GOOGLE_AUTHENTICATION_CREDENTIALS" value=""/>
-        <env name="GOOGLE_CLOUD_PROJECT" value=""/>
-    </php>
 </phpunit>

@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Kynx\Swoole\Processor;
 
 use Kynx\Swoole\Processor\Handler\ReceiveHandler;
+use Kynx\Swoole\Processor\Handler\WorkerErrorHandler;
 use Kynx\Swoole\Processor\Handler\WorkerStartHandler;
 use Kynx\Swoole\Processor\Job\CompletionHandlerInterface;
 use Kynx\Swoole\Processor\Job\JobProviderInterface;
 use Kynx\Swoole\Processor\Job\NoOpCompletionHandler;
 use Kynx\Swoole\Processor\Job\WorkerInterface;
 use Kynx\Swoole\Processor\Process\JobRunner;
+use Swoole\Atomic;
 use Swoole\Process;
 use Swoole\Server;
 
@@ -27,6 +29,7 @@ final readonly class Processor
         JobProviderInterface $jobProvider,
         WorkerInterface $worker,
         CompletionHandlerInterface $completionHandler = new NoOpCompletionHandler(),
+        private Atomic $errorCount = new Atomic()
     ) {
         $this->server = new Server($config->getSocket(), 0, SWOOLE_PROCESS, SWOOLE_UNIX_STREAM);
         $this->server->set([
@@ -42,10 +45,12 @@ final readonly class Processor
         ]);
 
         $this->server->on('WorkerStart', new WorkerStartHandler($worker));
-        $this->server->on('Receive', new ReceiveHandler($worker));
+        $this->server->on('Receive', new ReceiveHandler($worker, $this->errorCount));
+        $this->server->on('WorkerError', new WorkerErrorHandler($this->errorCount));
 
         $runner = new JobRunner(
             $this->server,
+            $this->errorCount,
             $jobProvider,
             $completionHandler,
             $config->getConcurrency(),
@@ -54,8 +59,9 @@ final readonly class Processor
         $this->server->addProcess(new Process($runner, false, 0, true));
     }
 
-    public function start(): void
+    public function run(): bool
     {
         $this->server->start();
+        return $this->errorCount->get() === 0;
     }
 }

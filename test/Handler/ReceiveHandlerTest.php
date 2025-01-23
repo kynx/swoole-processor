@@ -11,6 +11,7 @@ use Kynx\Swoole\Processor\Job\WorkerError;
 use Kynx\Swoole\Processor\Job\WorkerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Swoole\Atomic;
 use Swoole\Server;
 
 use function pack;
@@ -33,10 +34,13 @@ final class ReceiveHandlerTest extends TestCase
         $server->expects(self::once())
             ->method('send')
             ->with(123, pack('N', strlen($serialized)) . $serialized);
+        $errorCount = new Atomic();
 
-        $handler = new ReceiveHandler($worker);
+        $handler = new ReceiveHandler($worker, $errorCount);
         $data    = serialize($job);
         ($handler)($server, 123, 1, pack('N', $data) . $data);
+
+        self::assertSame(0, $errorCount->get());
     }
 
     public function testInvokeHandlesWorkerException(): void
@@ -53,9 +57,12 @@ final class ReceiveHandlerTest extends TestCase
         $server->expects(self::once())
             ->method('send')
             ->with(123, pack('N', strlen($serialized)) . $serialized);
+        $errorCount = new Atomic();
 
-        $handler = new ReceiveHandler($worker);
+        $handler = new ReceiveHandler($worker, $errorCount);
         $data    = serialize($job);
         ($handler)($server, 123, 1, pack('N', $data) . $data);
+
+        self::assertSame(1, $errorCount->get());
     }
 }
