@@ -24,7 +24,7 @@
     </testsuites>
     <groups>
         <exclude>
-            <group>terminal-output</group>
+            <group>processor</group>
         </exclude>
     </groups>
 

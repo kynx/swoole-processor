@@ -67,6 +67,7 @@ final class ProcessorTest extends TestCase
         }
     }
 
+    #[Group('processor')]
     public function testProcessorRunsJobs(): void
     {
         $expected = [
@@ -97,6 +98,7 @@ final class ProcessorTest extends TestCase
         }
     }
 
+    #[Group('processor')]
     public function testProcessHandlesLargePayload(): void
     {
         $payloads                = [
@@ -115,7 +117,7 @@ final class ProcessorTest extends TestCase
         self::assertStringContainsString($expected, $actual);
     }
 
-    #[Group('terminal-output')]
+    #[Group('processor')]
     public function testRunWithCompletionExceptionReturnsFalse(): void
     {
         $this->completor->triggerError = true;
