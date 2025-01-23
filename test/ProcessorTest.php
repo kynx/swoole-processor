@@ -8,6 +8,7 @@ use Kynx\Swoole\Processor\Config;
 use Kynx\Swoole\Processor\Job\Job;
 use Kynx\Swoole\Processor\Processor;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
@@ -114,6 +115,7 @@ final class ProcessorTest extends TestCase
         self::assertStringContainsString($expected, $actual);
     }
 
+    #[Group('terminal-output')]
     public function testRunWithCompletionExceptionReturnsFalse(): void
     {
         $this->completor->triggerError = true;
