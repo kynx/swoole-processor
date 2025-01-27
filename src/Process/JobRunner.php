@@ -15,6 +15,7 @@ use Swoole\Coroutine\Channel;
 use Swoole\Server;
 use Throwable;
 
+use function assert;
 use function pack;
 use function serialize;
 use function socket_strerror;
@@ -103,7 +104,9 @@ final readonly class JobRunner
                 break;
             }
 
-            Coroutine::create($this->getRunner($iterator->current(), $channel));
+            $current = $iterator->current();
+            assert($current instanceof Job);
+            Coroutine::create($this->getRunner($current, $channel));
             $iterator->next();
             $processing++;
         }
@@ -123,7 +126,9 @@ final readonly class JobRunner
             $processing--;
 
             if ($iterator->valid()) {
-                Coroutine::create($this->getRunner($iterator->current(), $channel));
+                $current = $iterator->current();
+                assert($current instanceof Job);
+                Coroutine::create($this->getRunner($current, $channel));
                 $iterator->next();
                 $processing++;
             }

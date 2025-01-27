@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<files psalm-version="5.26.1@d747f6500b38ac4f7dfc5edbcae6e4b637d7add0">
+<files psalm-version="6.0.0@b8e96bb617bf59382113b1b56cef751f648a7dc9">
   <file src="src/Handler/ReceiveHandler.php">
     <UnusedParam>
       <code><![CDATA[$rectorId]]></code>
@@ -35,13 +35,5 @@
     <RedundantConditionGivenDocblockType>
       <code><![CDATA[assertSame]]></code>
     </RedundantConditionGivenDocblockType>
-  </file>
-  <file src="test/Process/JobRunnerTest.php">
-    <UnusedFunctionCall>
-      <code><![CDATA[run]]></code>
-      <code><![CDATA[run]]></code>
-      <code><![CDATA[run]]></code>
-      <code><![CDATA[run]]></code>
-    </UnusedFunctionCall>
   </file>
 </files>

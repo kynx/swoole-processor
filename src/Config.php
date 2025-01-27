@@ -50,7 +50,7 @@ final readonly class Config
         return $this->socket ?? sprintf(
             '%s/swoole-processor.%s.sock',
             sys_get_temp_dir(),
-            getmypid()
+            (string) getmypid()
         );
     }
 
