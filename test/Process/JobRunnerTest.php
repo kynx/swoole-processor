@@ -27,6 +27,8 @@ use function serialize;
 use function strlen;
 use function Swoole\Coroutine\run;
 
+use const SOCKET_EAGAIN;
+
 #[CoversClass(JobRunner::class)]
 #[RunTestsInSeparateProcesses]
 final class JobRunnerTest extends TestCase
@@ -122,6 +124,23 @@ final class JobRunnerTest extends TestCase
         $this->client->expects(self::once())
             ->method('recv')
             ->willReturn(pack('N', strlen($serialized)) . $serialized);
+
+        run($this->runner);
+
+        self::assertSame(0, $this->errorCount->get());
+    }
+
+    public function testInvokeRetriesSocketReceive(): void
+    {
+        $this->jobProvider->method('getIterator')
+            ->willReturn(new ArrayIterator([new Job('a')]));
+        $this->client->method('send')
+            ->willReturn(123);
+        $serialized = serialize(new Job('b'));
+        $this->client->expects(self::exactly(2))
+            ->method('recv')
+            ->willReturnOnConsecutiveCalls(false, pack('N', strlen($serialized)) . $serialized);
+        $this->client->errCode = SOCKET_EAGAIN;
 
         run($this->runner);
 

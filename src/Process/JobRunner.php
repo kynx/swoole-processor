@@ -25,6 +25,7 @@ use function swoole_error_log;
 use function unserialize;
 use function usleep;
 
+use const SOCKET_EAGAIN;
 use const SWOOLE_LOG_ERROR;
 use const SWOOLE_SOCK_SYNC;
 use const SWOOLE_SOCK_UNIX_STREAM;
@@ -154,7 +155,21 @@ final readonly class JobRunner
                 usleep(1000);
             }
 
-            $result = $client->recv();
+            $attempts = 0;
+            while (($result = $client->recv()) === false) {
+                $attempts++;
+                if ($client->errCode === SOCKET_EAGAIN && $attempts < 100) {
+                    usleep(1000);
+                    continue;
+                }
+
+                swoole_error_log(
+                    SWOOLE_LOG_ERROR,
+                    sprintf("Could not receive from socket: %s", socket_strerror($client->errCode))
+                );
+                return;
+            }
+
             if ($result !== false) {
                 $channel->push(unserialize(substr($result, 4)));
             }
