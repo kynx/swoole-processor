@@ -21,14 +21,16 @@ final class ConfigTest extends TestCase
     {
         $concurrency     = 123;
         $workers         = 12;
+        $socketTimeout   = 0.5;
         $maxCoroutines   = 3_000;
         $maxPacketLength = 64 * 1024;
         $socket          = '/tmp/test.sock';
 
-        $config = new Config($concurrency, $workers, $maxCoroutines, $maxPacketLength, $socket);
+        $config = new Config($concurrency, $workers, $socketTimeout, $maxCoroutines, $maxPacketLength, $socket);
 
         self::assertSame($concurrency, $config->getConcurrency());
         self::assertSame($workers, $config->getWorkers());
+        self::assertSame($socketTimeout, $config->getSocketTimeout());
         self::assertSame($maxCoroutines, $config->getMaxCoroutines());
         self::assertSame($maxPacketLength, $config->getMaxPacketLength());
         self::assertSame($socket, $config->getSocket());
@@ -38,6 +40,7 @@ final class ConfigTest extends TestCase
     {
         $concurrency     = 10;
         $workers         = swoole_cpu_num() - 1;
+        $socketTimeout   = 10.0;
         $maxCoroutines   = 1_000_000;
         $maxPacketLength = 2 * 1024 * 1024;
         $socket          = sprintf(
@@ -50,6 +53,7 @@ final class ConfigTest extends TestCase
 
         self::assertSame($concurrency, $config->getConcurrency());
         self::assertSame($workers, $config->getWorkers());
+        self::assertSame($socketTimeout, $config->getSocketTimeout());
         self::assertSame($maxCoroutines, $config->getMaxCoroutines());
         self::assertSame($maxPacketLength, $config->getMaxPacketLength());
         self::assertSame($socket, $config->getSocket());
@@ -58,6 +62,6 @@ final class ConfigTest extends TestCase
     public function testConstructorChecksMaximumConcurrency(): void
     {
         self::expectException(MaximumConcurrencyException::class);
-        new Config(3, 1, 2);
+        new Config(3, 1, 0.5, 2);
     }
 }

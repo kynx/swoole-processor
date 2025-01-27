@@ -51,6 +51,7 @@ final readonly class JobRunner
         private JobProviderInterface $jobProvider,
         private CompletionHandlerInterface $completionHandler,
         private int $concurrency = 10,
+        private float $socketTimeout = 10.0,
         int $maxPacketLength = 2 * 1024 * 1024,
         ?Closure $clientFactory = null
     ) {
@@ -139,11 +140,12 @@ final readonly class JobRunner
 
     private function getRunner(Job $job, Channel $channel): Closure
     {
-        $socket = $this->server->host;
-        $client = ($this->clientFactory)();
+        $socket  = $this->server->host;
+        $timeout = $this->socketTimeout;
+        $client  = ($this->clientFactory)();
 
-        return static function () use ($client, $job, $channel, $socket) {
-            $client->connect($socket);
+        return static function () use ($client, $job, $channel, $socket, $timeout) {
+            $client->connect($socket, 0, $timeout);
             $serialized = serialize($job);
             unset($job);
 
@@ -160,10 +162,11 @@ final readonly class JobRunner
                 usleep(1000);
             }
 
-            $attempts = 0;
+            $attempts    = 0;
+            $maxAttempts = $timeout * 1000000 / 1000;
             while (($result = $client->recv()) === false) {
                 $attempts++;
-                if ($client->errCode === SOCKET_EAGAIN && $attempts < 100) {
+                if ($client->errCode === SOCKET_EAGAIN && $attempts < $maxAttempts) {
                     usleep(1000);
                     continue;
                 }

@@ -54,6 +54,7 @@ final readonly class Processor
             $jobProvider,
             $completionHandler,
             $config->getConcurrency(),
+            $config->getSocketTimeout(),
             $config->getMaxPacketLength()
         );
         $this->server->addProcess(new Process($runner, false, 0, true));

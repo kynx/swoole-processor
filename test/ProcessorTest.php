@@ -48,7 +48,7 @@ final class ProcessorTest extends TestCase
         $this->worker      = new MockWorker($this->outfile);
         $this->completor   = new MockCompletor($this->outfile);
 
-        $config          = new Config(3, 2, 10, 2 * 1024 * 1024, $this->tempDir . '/processor.sock');
+        $config          = new Config(3, 2, 0.5, 10, 2 * 1024 * 1024, $this->tempDir . '/processor.sock');
         $this->processor = new Processor(
             $config,
             $this->jobProvider,
