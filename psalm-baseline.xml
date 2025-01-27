@@ -18,6 +18,14 @@
       <code><![CDATA[isset($this->result)]]></code>
     </RedundantPropertyInitializationCheck>
   </file>
+  <file src="src/Process/JobRunner.php">
+    <MixedArgument>
+      <code><![CDATA[$result]]></code>
+    </MixedArgument>
+    <PossiblyUndefinedVariable>
+      <code><![CDATA[$result]]></code>
+    </PossiblyUndefinedVariable>
+  </file>
   <file src="test/Job/JobTest.php">
     <RedundantConditionGivenDocblockType>
       <code><![CDATA[assertSame]]></code>
@@ -30,6 +38,7 @@
   </file>
   <file src="test/Process/JobRunnerTest.php">
     <UnusedFunctionCall>
+      <code><![CDATA[run]]></code>
       <code><![CDATA[run]]></code>
       <code><![CDATA[run]]></code>
       <code><![CDATA[run]]></code>
