@@ -16,6 +16,7 @@ final readonly class Config
     public function __construct(
         private int $concurrency = 10,
         private ?int $workers = null,
+        private float $socketTimeout = 10.0,
         private int $maxCoroutines = 1_000_000,
         private int $maxPacketLength = 2 * 1024 * 1024,
         private ?string $socket = null,
@@ -43,6 +44,11 @@ final readonly class Config
     public function getMaxPacketLength(): int
     {
         return $this->maxPacketLength;
+    }
+
+    public function getSocketTimeout(): float
+    {
+        return $this->socketTimeout;
     }
 
     public function getSocket(): string
