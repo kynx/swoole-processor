@@ -12,6 +12,7 @@ use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 use function array_map;
+use function assert;
 use function file_get_contents;
 use function getmypid;
 use function glob;
@@ -36,11 +37,13 @@ final class ProcessorTest extends TestCase
     {
         parent::setUp();
 
-        $this->tempDir = sys_get_temp_dir() . '/phpunit.' . getmypid();
+        $this->tempDir = sys_get_temp_dir() . '/phpunit.' . (string) getmypid();
         if (! is_dir($this->tempDir)) {
             mkdir($this->tempDir, 0770, true);
         }
-        $this->outfile     = tempnam($this->tempDir, 'out');
+        $outfile = tempnam($this->tempDir, 'out');
+        assert($outfile !== false);
+        $this->outfile     = $outfile;
         $this->jobProvider = new MockJobProvider();
         $this->worker      = new MockWorker($this->outfile);
         $this->completor   = new MockCompletor($this->outfile);
@@ -62,7 +65,11 @@ final class ProcessorTest extends TestCase
             return;
         }
 
-        foreach (glob($this->tempDir . '/*') as $file) {
+        $files = glob($this->tempDir . '/*');
+        if ($files === false) {
+            return;
+        }
+        foreach ($files as $file) {
             @unlink($file);
         }
     }
@@ -92,7 +99,7 @@ final class ProcessorTest extends TestCase
         $result                  = $this->processor->run();
         self::assertTrue($result);
 
-        $actual = file_get_contents($this->outfile);
+        $actual = (string) file_get_contents($this->outfile);
         foreach ($expected as $line) {
             self::assertStringContainsString($line, $actual);
         }
@@ -113,7 +120,7 @@ final class ProcessorTest extends TestCase
         $result                  = $this->processor->run();
         self::assertTrue($result);
 
-        $actual = file_get_contents($this->outfile);
+        $actual = (string) file_get_contents($this->outfile);
         self::assertStringContainsString($expected, $actual);
     }
 

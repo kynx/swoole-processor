@@ -9,7 +9,7 @@ use Iterator;
 interface JobProviderInterface
 {
     /**
-     * @return Iterator<Job>
+     * @return Iterator<array-key, Job>
      */
     public function getIterator(): Iterator;
 }

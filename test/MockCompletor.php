@@ -7,8 +7,10 @@ namespace KynxTest\Swoole\Processor;
 use Kynx\Swoole\Processor\Job\CompletionHandlerInterface;
 use Kynx\Swoole\Processor\Job\Job;
 
+use function assert;
 use function fopen;
 use function fwrite;
+use function is_resource;
 
 final class MockCompletor implements CompletionHandlerInterface
 {
@@ -18,7 +20,9 @@ final class MockCompletor implements CompletionHandlerInterface
 
     public function __construct(string $file)
     {
-        $this->handle = fopen($file, 'a+');
+        $handle = fopen($file, 'a+');
+        assert(is_resource($handle));
+        $this->handle = $handle;
     }
 
     public function complete(Job $job): void
